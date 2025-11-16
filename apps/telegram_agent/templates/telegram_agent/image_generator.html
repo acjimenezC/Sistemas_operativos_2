@@ -1,0 +1,481 @@
+{% extends "telegram_agent/base.html" %}
+
+{% block title %}Generar Imagenes - Bot Reclutamiento{% endblock %}
+
+{% block content %}
+<h1 style="color: white; text-align: center; margin-bottom: 10px; font-size: 32px;">Crear Publicación</h1>
+<p style="color: #aaa; text-align: center; margin-bottom: 30px; font-size: 15px;">Publica contenido profesional sobre oportunidades de empleo</p>
+
+<!-- Tabs -->
+<div style="display: flex; justify-content: center; gap: 30px; margin-bottom: 40px; border-bottom: 1px solid rgba(126, 255, 162, 0.2); padding-bottom: 20px;">
+    <button onclick="switchTab('imagen')" id="tab-imagen" class="tab-button active">Imagen</button>
+    <button onclick="switchTab('carrusel')" id="tab-carrusel" class="tab-button">Carrusel</button>
+    <button onclick="switchTab('video')" id="tab-video" class="tab-button">Video</button>
+    <button onclick="switchTab('historia')" id="tab-historia" class="tab-button">Historia</button>
+    <button onclick="switchTab('ia')" id="tab-ia" class="tab-button active-tab">IA</button>
+</div>
+
+<!-- Contenido IA (Generador) -->
+<div id="content-ia" class="tab-content" style="display: grid; grid-template-columns: 1fr 1fr; gap: 40px; max-width: 1400px; margin: 0 auto;">
+    <div>
+        <h3 style="color: white; margin-bottom: 30px; font-size: 22px; font-weight: 600;">🎨 Generar con IA</h3>
+        
+        <form id="imageForm" class="image-form">
+            {% csrf_token %}
+            <div class="form-group">
+                <label for="content-type" style="color: white;">Tipo de Contenido</label>
+                <select id="content-type" name="content_type" style="width: 100%; padding: 12px; border: 1px solid rgba(126, 255, 162, 0.3); border-radius: 8px; background: #1a1a1a; color: white; font-size: 14px;" required>
+                    <option value="">Selecciona un tipo</option>
+                    <option value="image">📸 Imagen</option>
+                    <option value="carousel">🎠 Carrusel</option>
+                    <option value="video">🎬 Video</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="theme" style="color: white;">Tema</label>
+                <select id="theme" name="theme" style="width: 100%; padding: 12px; border: 1px solid rgba(126, 255, 162, 0.3); border-radius: 8px; background: #1a1a1a; color: white; font-size: 14px;" required>
+                    <option value="">Selecciona un tema</option>
+                    <option value="recruitment">Reclutamiento</option>
+                    <option value="job-training">Capacitación</option>
+                    <option value="job-fair">Feria de Empleo</option>
+                    <option value="skills">Desarrollo de Habilidades</option>
+                    <option value="career">Carrera Profesional</option>
+                    <option value="entrepreneurship">Emprendimiento</option>
+                    <option value="remote-work">Trabajo Remoto</option>
+                    <option value="internship">Prácticas</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="prompt" style="color: white;">Descripción</label>
+                <textarea id="prompt" name="prompt" placeholder="Describe qué deseas generar..." style="width: 100%; padding: 12px; border: 1px solid rgba(126, 255, 162, 0.3); border-radius: 8px; background: #1a1a1a; color: white; min-height: 150px; font-size: 14px; resize: vertical;"></textarea>
+            </div>
+
+            <button type="submit" class="btn-generate" style="width: 100%; padding: 12px; background: linear-gradient(90deg, #3D1A5F, #7EFFA2); color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; margin-bottom: 15px;">Generar</button>
+
+            <div class="form-group">
+                <label for="schedule" style="color: white; font-size: 14px;">Programar (opcional)</label>
+                <input type="date" id="schedule" name="schedule" style="width: 100%; padding: 12px; border: 1px solid rgba(126, 255, 162, 0.3); border-radius: 8px; background: #1a1a1a; color: white; margin-bottom: 10px;">
+                <input type="time" id="schedule-time" name="schedule-time" style="width: 100%; padding: 12px; border: 1px solid rgba(126, 255, 162, 0.3); border-radius: 8px; background: #1a1a1a; color: white;">
+            </div>
+        </form>
+
+        <div id="loading" class="loading" style="display: none; margin-top: 20px; padding: 20px; background: rgba(126, 255, 162, 0.1); border-radius: 8px; border-left: 4px solid #7EFFA2; color: #7EFFA2; text-align: center;">
+            ⏳ Generando imagen con Gemini IA... Por favor espera
+        </div>
+    </div>
+
+    <!-- Preview -->
+    <div>
+        <h3 style="color: white; margin-bottom: 30px; font-size: 22px; font-weight: 600;">👁️ Vista Previa</h3>
+        
+        <div id="content-type-display" style="background: rgba(126, 255, 162, 0.15); padding: 15px; border-radius: 8px; margin-bottom: 20px; border-left: 4px solid #7EFFA2; display: none;">
+            <p style="color: #7EFFA2; font-size: 14px; margin: 0;"><strong>Tipo de contenido:</strong> <span id="type-badge">-</span></p>
+        </div>
+        
+        <div id="preview" style="border: 2px dashed rgba(126, 255, 162, 0.3); border-radius: 8px; padding: 30px; text-align: center; min-height: 400px; display: flex; align-items: center; justify-content: center; color: #999;">
+            <p>La imagen generada aparecerá aquí</p>
+        </div>
+
+        <div id="preview-content" style="display: none; margin-top: 20px;">
+            <div id="cacheWarning" style="display: none; background: rgba(255, 193, 7, 0.2); border: 2px solid #FFC107; border-radius: 8px; padding: 15px; margin-bottom: 15px; color: #FFC107;">
+                <strong>⚠️ AVISO:</strong> <span id="warningMessage"></span>
+            </div>
+            <img id="previewImage" src="" alt="Imagen generada" style="width: 100%; border-radius: 8px; margin-bottom: 20px;">
+            
+            <div style="background: rgba(126, 255, 162, 0.1); padding: 20px; border-radius: 8px; margin-bottom: 20px; border-left: 4px solid #7EFFA2;">
+                <h4 id="previewTitle" style="margin-bottom: 10px; color: white; font-size: 16px;"></h4>
+                <p id="previewDesc" style="color: #aaa; line-height: 1.6; font-size: 14px;"></p>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                <button id="publishBtn" onclick="publishImage()" style="padding: 12px; background: #7EFFA2; color: #3D1A5F; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; transition: all 0.3s ease;">📤 Publicar</button>
+                <button id="generateNewBtn" type="button" onclick="generateNewImage()" style="padding: 12px; background: rgba(126, 255, 162, 0.2); color: #7EFFA2; border: 1px solid #7EFFA2; border-radius: 8px; font-weight: 600; cursor: pointer; transition: all 0.3s ease;">🔄 Generar Otra</button>
+            </div>
+            <button type="button" onclick="cancelPreview()" style="width: 100%; padding: 12px; margin-top: 10px; background: rgba(255, 255, 255, 0.1); color: white; border: 1px solid rgba(255, 255, 255, 0.2); border-radius: 8px; cursor: pointer; transition: all 0.3s ease;">❌ Cancelar</button>
+        </div>
+    </div>
+</div>
+
+<!-- Otros tabs vacíos -->
+<div id="content-imagen" class="tab-content" style="display: none; padding: 40px;">
+    <p style="color: #aaa; text-align: center; padding: 40px;">Contenido de Imagen en desarrollo</p>
+</div>
+<div id="content-carrusel" class="tab-content" style="display: none; padding: 40px;">
+    <p style="color: #aaa; text-align: center; padding: 40px;">Contenido de Carrusel en desarrollo</p>
+</div>
+<div id="content-video" class="tab-content" style="display: none; padding: 40px;">
+    <p style="color: #aaa; text-align: center; padding: 40px;">Contenido de Video en desarrollo</p>
+</div>
+<div id="content-historia" class="tab-content" style="display: none; padding: 40px;">
+    <p style="color: #aaa; text-align: center; padding: 40px;">Contenido de Historia en desarrollo</p>
+</div>
+
+
+
+<h3 style="color: white; margin-top: 60px; margin-bottom: 30px; font-size: 22px; font-weight: 600;">🖼️ Imágenes Generadas</h3>
+
+<div class="grid-3">
+    {% for image in generated_images %}
+    <div style="background: rgba(255,255,255,0.05); border: 1px solid rgba(126, 255, 162, 0.2); border-radius: 10px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.2); transition: all 0.3s;">
+        <img src="{{ image.image_url }}" alt="{{ image.title }}" style="width: 100%; height: 200px; object-fit: cover;">
+        <div style="padding: 15px;">
+            <h4 style="color: white; margin-bottom: 5px; font-size: 14px; font-weight: 600;">{{ image.title }}</h4>
+            <p style="font-size: 12px; color: #888;">📅 {{ image.created_at|date:"d/m/Y H:i" }}</p>
+            <p style="color: #aaa; font-size: 12px; margin: 10px 0; line-height: 1.4;">{{ image.description|truncatewords:15 }}</p>
+            {% if image.status == 'published' %}
+            <span style="background: #7EFFA2; color: #3D1A5F; padding: 5px 10px; border-radius: 6px; font-size: 11px; font-weight: 600; display: inline-block;">✅ Publicada</span>
+            {% elif image.status == 'draft' %}
+            <span style="background: rgba(126, 255, 162, 0.2); color: #7EFFA2; padding: 5px 10px; border-radius: 6px; font-size: 11px; display: inline-block;">📝 Borrador</span>
+            {% endif %}
+        </div>
+    </div>
+    {% empty %}
+    <div style="grid-column: 1 / -1; text-align: center; color: #666; padding: 60px 20px;">
+        <p style="font-size: 18px; margin-bottom: 10px;">🎨 Aún no hay imágenes generadas</p>
+        <p style="font-size: 14px;">Crea tu primera imagen arriba</p>
+    </div>
+    {% endfor %}
+</div>
+
+<script>
+// Mapeo de tipos de contenido
+const contentTypeMap = {
+    'image': '📸 Imagen',
+    'carousel': '🎠 Carrusel',
+    'video': '🎬 Video'
+};
+
+// Variable global para guardar datos de imagen generada
+let currentImageData = {
+    image_base64: null,
+    theme: null,
+    description: null
+};
+
+// Actualizar tipo de contenido en tiempo real
+document.addEventListener('DOMContentLoaded', function() {
+    const contentTypeSelect = document.getElementById('content-type');
+    const typeBadge = document.getElementById('type-badge');
+    const contentTypeDisplay = document.getElementById('content-type-display');
+    const imageForm = document.getElementById('imageForm');
+    
+    if (contentTypeSelect) {
+        contentTypeSelect.addEventListener('change', function() {
+            if (this.value) {
+                typeBadge.textContent = contentTypeMap[this.value] || this.value;
+                contentTypeDisplay.style.display = 'block';
+            } else {
+                contentTypeDisplay.style.display = 'none';
+            }
+        });
+    }
+    
+    // Manejar el envío del formulario
+    if (imageForm) {
+        imageForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            // Validar campos obligatorios
+            const contentType = document.getElementById('content-type').value;
+            const theme = document.getElementById('theme').value;
+            const prompt = document.getElementById('prompt').value;
+            
+            if (!contentType) {
+                alert('Por favor selecciona un tipo de contenido');
+                return;
+            }
+            if (!theme) {
+                alert('Por favor selecciona un tema');
+                return;
+            }
+            if (!prompt) {
+                alert('Por favor escribe una descripción');
+                return;
+            }
+            
+            // Mostrar loading
+            document.getElementById('loading').style.display = 'block';
+            document.getElementById('preview').style.display = 'none';
+            
+            // Enviar datos al servidor para generar imagen
+            fetch('/telegram/api/generate-image/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+                },
+                body: JSON.stringify({
+                    content_type: contentType,
+                    theme: theme,
+                    description: prompt
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log('Respuesta del servidor:', data);
+                document.getElementById('loading').style.display = 'none';
+                
+                if (data.success) {
+                    // Guardar datos de imagen globalmente
+                    currentImageData.image_base64 = data.image_base64;
+                    currentImageData.theme = data.theme;
+                    currentImageData.description = data.description;
+                    
+                    // Mostrar imagen generada directamente (base64)
+                    document.getElementById('preview-content').style.display = 'block';
+                    document.getElementById('previewImage').src = data.image_base64;
+                    document.getElementById('previewTitle').textContent = data.theme;
+                    document.getElementById('previewDesc').textContent = data.description;
+                    
+                    // Sin avisos - mostrar imagen directamente
+                    document.getElementById('cacheWarning').style.display = 'none';
+                    
+                    // Actualizar display de tipo
+                    typeBadge.textContent = contentTypeMap[contentType];
+                    contentTypeDisplay.style.display = 'block';
+                    
+                    console.log('Imagen mostrada exitosamente');
+                    console.log('Datos guardados en currentImageData:', currentImageData);
+                } else {
+                    alert('Error generando imagen: ' + (data.error || 'Error desconocido'));
+                    console.error('Error en respuesta:', data);
+                }
+            })
+            .catch(error => {
+                console.error('Error en fetch:', error);
+                document.getElementById('loading').style.display = 'none';
+                alert('Error al conectar con el servidor. Por favor intenta de nuevo.');
+            });
+        });
+    }
+});
+
+// Funciones para cambiar tabs
+function switchTab(tabName) {
+    // Ocultar todos los tabs
+    const tabs = document.querySelectorAll('.tab-content');
+    tabs.forEach(tab => {
+        tab.style.display = 'none';
+    });
+    
+    // Remover clase active de todos los botones
+    const buttons = document.querySelectorAll('.tab-button');
+    buttons.forEach(btn => btn.classList.remove('active-tab'));
+    
+    // Mostrar el tab seleccionado
+    const selectedTab = document.getElementById('content-' + tabName);
+    if (selectedTab) {
+        // Para content-ia usar grid, para otros usar block
+        if (tabName === 'ia') {
+            selectedTab.style.display = 'grid';
+        } else {
+            selectedTab.style.display = 'block';
+        }
+    }
+    
+    // Marcar botón como activo
+    event.target.classList.add('active-tab');
+}
+
+// Funciones existentes del generador
+function generateNewImage() {
+    // Limpiar datos de imagen anterior
+    currentImageData = {
+        image_base64: null,
+        theme: null,
+        description: null
+    };
+    
+    document.getElementById('preview-content').style.display = 'none';
+    document.getElementById('preview').style.display = 'flex';
+    document.getElementById('imageForm').reset();
+    document.getElementById('content-type-display').style.display = 'none';
+    console.log('Formulario reset, datos limpios');
+}
+
+function cancelPreview() {
+    document.getElementById('preview-content').style.display = 'none';
+    document.getElementById('preview').style.display = 'flex';
+}
+
+function publishImage() {
+    const publishBtn = document.getElementById('publishBtn');
+    
+    console.log('═══════════════════════════════════════════');
+    console.log('🖼️  INICIANDO PUBLICACIÓN DE IMAGEN');
+    console.log('═══════════════════════════════════════════');
+    console.log('✓ Datos globales:', currentImageData);
+    console.log('✓ Tema:', currentImageData.theme);
+    console.log('✓ Descripción:', currentImageData.description);
+    console.log('✓ Tamaño base64:', currentImageData.image_base64 ? currentImageData.image_base64.length + ' caracteres' : 'VACÍO');
+    console.log('═══════════════════════════════════════════');
+    
+    // Validación de imagen
+    if (!currentImageData.image_base64 || currentImageData.image_base64.trim() === '') {
+        alert('❌ No hay imagen para publicar. Genera una primero.');
+        console.error('ERROR: imagen_base64 está vacío');
+        return;
+    }
+    
+    // Validación de longitud mínima
+    if (currentImageData.image_base64.length < 100) {
+        alert('❌ La imagen está incompleta. Intenta generar de nuevo.');
+        console.error('ERROR: imagen_base64 muy corta:', currentImageData.image_base64.length + ' caracteres');
+        return;
+    }
+    
+    // Validación de contenido
+    if (!currentImageData.theme || !currentImageData.description) {
+        alert('❌ Falta el tema o la descripción');
+        return;
+    }
+    
+    // Deshabilitar botón durante el envío
+    if (publishBtn) {
+        publishBtn.disabled = true;
+        publishBtn.style.opacity = '0.6';
+        publishBtn.style.cursor = 'not-allowed';
+        publishBtn.textContent = '⏳ Publicando...';
+    }
+    
+    document.getElementById('loading').style.display = 'block';
+    console.log('📤 Enviando solicitud al servidor...');
+    
+    // Preparar payload
+    const payload = {
+        theme: currentImageData.theme,
+        description: currentImageData.description,
+        image_base64: currentImageData.image_base64
+    };
+    
+    console.log('📦 Tamaño del payload:', JSON.stringify(payload).length + ' bytes');
+    
+    fetch('/telegram/api/publish-image/', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+        },
+        body: JSON.stringify(payload)
+    })
+    .then(response => {
+        console.log('📊 Status HTTP:', response.status);
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+        return response.json();
+    })
+    .then(data => {
+        document.getElementById('loading').style.display = 'none';
+        console.log('📨 Respuesta del servidor:', data);
+        console.log('═══════════════════════════════════════════');
+        
+        if (data.success) {
+            alert('✅ ¡Imagen publicada exitosamente en Telegram!');
+            generateNewImage();
+        } else {
+            alert('❌ Error al publicar:\n' + (data.error || 'Error desconocido'));
+            console.error('❌ Error en respuesta:', data);
+            // Re-habilitar botón en caso de error
+            if (publishBtn) {
+                publishBtn.disabled = false;
+                publishBtn.style.opacity = '1';
+                publishBtn.style.cursor = 'pointer';
+                publishBtn.textContent = '📤 Publicar';
+            }
+        }
+    })
+    .catch(error => {
+        console.error('❌ Error en fetch:', error);
+        document.getElementById('loading').style.display = 'none';
+        alert('❌ Error de red al publicar:\n' + error.message + '\n\nRevisa la consola (F12).');
+        // Re-habilitar botón en caso de error
+        if (publishBtn) {
+            publishBtn.disabled = false;
+            publishBtn.style.opacity = '1';
+            publishBtn.style.cursor = 'pointer';
+            publishBtn.textContent = '📤 Publicar';
+        }
+    });
+}
+</script>
+
+<style>
+.tab-button {
+    background: none;
+    border: none;
+    color: #aaa;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    padding: 10px 0;
+    transition: all 0.3s;
+    position: relative;
+}
+
+.tab-button:hover {
+    color: #7EFFA2;
+}
+
+.tab-button.active-tab {
+    color: #3D1A5F;
+    background: #7EFFA2;
+    padding: 10px 20px;
+    border-radius: 6px;
+}
+
+.form-group {
+    margin-bottom: 20px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 8px;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.btn-generate {
+    width: 100%;
+    padding: 12px;
+    background: linear-gradient(90deg, #3D1A5F, #7EFFA2);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    font-size: 14px;
+    transition: all 0.3s;
+}
+
+.btn-generate:hover {
+    opacity: 0.9;
+    transform: translateY(-2px);
+}
+
+.loading {
+    padding: 20px;
+    background: rgba(126, 255, 162, 0.1);
+    border-radius: 8px;
+    border-left: 4px solid #7EFFA2;
+    color: #7EFFA2;
+    text-align: center;
+    font-size: 14px;
+}
+
+.grid-3 {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 20px;
+}
+
+@media (max-width: 1024px) {
+    #content-ia {
+        grid-template-columns: 1fr;
+        gap: 20px;
+    }
+}
+</style>
+{% endblock %}

@@ -1,0 +1,109 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Panel Admin - Loomy Bot - Magneto  {% endblock %}</title>
+    
+    <!-- CSS Base Global -->
+    <link rel="stylesheet" href="{% static 'css/base.css' %}">
+    
+    <!-- CSS Navbar -->
+    <link rel="stylesheet" href="{% static 'css/navbar.css' %}">
+    
+    <!-- CSS Páginas -->
+    <link rel="stylesheet" href="{% static 'css/dashboard.css' %}">
+    <link rel="stylesheet" href="{% static 'css/conversations.css' %}">
+    <link rel="stylesheet" href="{% static 'css/analytics.css' %}">
+    <link rel="stylesheet" href="{% static 'css/image_generator.css' %}">
+    
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.js"></script>
+    
+    <!-- Font Awesome para Iconos -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="navbar-brand">
+            <h1> Loomy Bot - Magneto</h1>
+        </div>
+        <div class="nav-links">
+            <a href="{% url 'telegram_agent:dashboard' %}" class="nav-link {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}">
+                <span class="nav-icon"> </span>
+                <span>Dashboard</span>
+            </a>
+            <a href="{% url 'telegram_agent:conversations' %}" class="nav-link {% if request.resolver_match.url_name == 'conversations' %}active{% endif %}">
+                <span class="nav-icon"> </span>
+                <span>Mensajes</span>
+            </a>
+            <a href="{% url 'telegram_agent:analytics' %}" class="nav-link {% if request.resolver_match.url_name == 'analytics' %}active{% endif %}">
+                <span class="nav-icon">  </span>
+                <span>Análisis</span>
+            </a>
+            <a href="{% url 'telegram_agent:image_generator' %}" class="nav-link {% if request.resolver_match.url_name == 'image_generator' %}active{% endif %}">
+                <span class="nav-icon"> </span>
+                <span>Imágenes</span>
+            </a>
+            <a href="{% url 'telegram_agent:surveys_list' %}" class="nav-link {% if request.resolver_match.url_name == 'surveys_list' %}active{% endif %}">
+                <span class="nav-icon">📊</span>
+                <span>Encuestas</span>
+            </a>
+            
+    </nav>
+
+    <main class="container">
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Footer con Redes Sociales -->
+    <footer style="background: rgba(61, 26, 95, 0.5); border-top: 1px solid rgba(126, 255, 162, 0.2); padding: 30px 20px; margin-top: 60px;">
+        <div style="max-width: 1200px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 30px;">
+            <div>
+                <p style="color: #aaa; font-size: 14px; margin: 0;">© 2025 Magneto Empleos. Todos los derechos reservados.</p>
+            </div>
+            <div style="display: flex; gap: 20px; align-items: center;">
+                <p style="color: #aaa; font-size: 14px; margin: 0;">Síguenos:</p>
+                <a href="https://www.instagram.com/magnetoempleos/" target="_blank" rel="noopener noreferrer" title="Instagram" style="color: #7EFFA2; transition: all 0.3s; text-decoration: none; display: inline-flex; align-items: center; justify-content: center; width: 40px; height: 40px; border-radius: 50%; background: rgba(126, 255, 162, 0.1);">
+                    <i class="fab fa-instagram"></i>
+                </a>
+                <a href="https://www.facebook.com/MagnetoEmpleos" target="_blank" rel="noopener noreferrer" title="Facebook" style="color: #7EFFA2; transition: all 0.3s; text-decoration: none; display: inline-flex; align-items: center; justify-content: center; width: 40px; height: 40px; border-radius: 50%; background: rgba(126, 255, 162, 0.1);">
+                    <i class="fab fa-facebook-f"></i>
+                </a>
+                <a href="https://www.linkedin.com/company/magnetoempleos/" target="_blank" rel="noopener noreferrer" title="LinkedIn" style="color: #7EFFA2; transition: all 0.3s; text-decoration: none; display: inline-flex; align-items: center; justify-content: center; width: 40px; height: 40px; border-radius: 50%; background: rgba(126, 255, 162, 0.1);">
+                    <i class="fab fa-linkedin-in"></i>
+                </a>
+                <a href="https://www.youtube.com/c/Magnetoempleos" target="_blank" rel="noopener noreferrer" title="YouTube" style="color: #7EFFA2; transition: all 0.3s; text-decoration: none; display: inline-flex; align-items: center; justify-content: center; width: 40px; height: 40px; border-radius: 50%; background: rgba(126, 255, 162, 0.1);">
+                    <i class="fab fa-youtube"></i>
+                </a>
+                <a href="https://www.tiktok.com/@magnetoempleos" target="_blank" rel="noopener noreferrer" title="TikTok" style="color: #7EFFA2; transition: all 0.3s; text-decoration: none; display: inline-flex; align-items: center; justify-content: center; width: 40px; height: 40px; border-radius: 50%; background: rgba(126, 255, 162, 0.1);">
+                    <i class="fab fa-tiktok"></i>
+                </a>
+            </div>
+        </div>
+    </footer>
+
+    <style>
+        footer a:hover {
+            background: rgba(126, 255, 162, 0.3) !important;
+            transform: scale(1.1);
+        }
+        
+        @media (max-width: 768px) {
+            footer {
+                text-align: center;
+            }
+            footer > div {
+                flex-direction: column !important;
+            }
+            footer > div > div:last-child {
+                justify-content: center !important;
+            }
+        }
+    </style>
+
+    <script src="{% static 'js/main.js' %}"></script>
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

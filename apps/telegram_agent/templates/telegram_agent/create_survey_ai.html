@@ -1,0 +1,310 @@
+{% extends "telegram_agent/base.html" %}
+{% load static %}
+
+{% block title %}Crear Encuesta con IA - Gemini{% endblock %}
+
+{% block content %}
+<div class="create-survey-container">
+    <div class="create-header">
+        <h1>✨ Crear Encuesta Automática con Gemini</h1>
+        <p>Describe lo que quieres en una encuesta y Gemini la generará automáticamente</p>
+    </div>
+
+    {% if error %}
+        <div class="alert alert-error">
+            <strong>Error:</strong> {{ error }}
+        </div>
+    {% endif %}
+
+    <div class="create-form-container">
+        <form method="post" class="survey-form">
+            {% csrf_token %}
+
+            <div class="form-group">
+                <label for="title">Título de la Encuesta *</label>
+                <input type="text" id="title" name="title" placeholder="Ej: Encuesta de Satisfacción Laboral" required />
+            </div>
+
+            <div class="form-group">
+                <label for="survey_type">Tipo de Encuesta *</label>
+                <select id="survey_type" name="survey_type" required>
+                    {% for value, label in survey_types %}
+                        <option value="{{ value }}">{{ label }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="prompt">
+                    Describe tu Encuesta (Prompt) *
+                </label>
+                <textarea 
+                    id="prompt" 
+                    name="prompt" 
+                    placeholder="Describe qué quieres preguntar. Ej:
+- Quiero saber qué tan satisfechos están los empleados
+- Necesito preguntas sobre salario, horario y ambiente laboral
+- Incluir una pregunta abierta para sugerencias
+- Debe tener rating del 1-5 para la satisfacción general"
+                    rows="8"
+                    required
+                ></textarea>
+                <small>Sé específico: el AI generará preguntas basadas en tu descripción</small>
+            </div>
+
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary">
+                    <span class="btn-icon">⚡</span>
+                    Generar Encuesta con Gemini
+                </button>
+                <a href="{% url 'telegram_agent:surveys_list' %}" class="btn btn-secondary">
+                    ← Volver a Encuestas
+                </a>
+            </div>
+        </form>
+
+        <div class="examples-section">
+            <h3>💡 Ejemplos de Prompts</h3>
+            <div class="examples">
+                <div class="example-card">
+                    <h4>Satisfacción Laboral</h4>
+                    <p>"Crea una encuesta para evaluar la satisfacción de los empleados con su trabajo actual. Incluye preguntas sobre:
+                    - Satisfacción general (rating 1-5)
+                    - Ambiente laboral (opción múltiple)
+                    - Flexibilidad (sí/no)
+                    - Recomendaciones (texto abierto)"</p>
+                </div>
+
+                <div class="example-card">
+                    <h4>Bienestar en el Trabajo</h4>
+                    <p>"Encuesta de bienestar: preguntas sobre salud mental, balance vida-trabajo, beneficios valorados, y sugerencias para mejorar. Incluir preguntas de rating para cada aspecto."</p>
+                </div>
+
+                <div class="example-card">
+                    <h4>Evento Corporativo</h4>
+                    <p>"Evaluación post-evento: ¿Qué te pareció el evento? (1-5), ¿Volvería a asistir? (sí/no), Temas que le gustaría ver (múltiple), Comentarios (texto)."</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.create-survey-container {
+    padding: 30px 20px;
+    max-width: 900px;
+    margin: 0 auto;
+}
+
+.create-header {
+    text-align: center;
+    margin-bottom: 40px;
+    padding-bottom: 20px;
+    border-bottom: 2px solid rgba(126, 255, 162, 0.3);
+}
+
+.create-header h1 {
+    margin: 0 0 10px 0;
+    font-size: 2.2em;
+    background: linear-gradient(135deg, #667eea, #764ba2, #f093fb);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.create-header p {
+    color: #95a5a6;
+    font-size: 15px;
+    margin: 0;
+}
+
+.alert {
+    padding: 15px;
+    border-radius: 8px;
+    margin-bottom: 30px;
+    border-left: 4px solid;
+}
+
+.alert-error {
+    background: #f8d7da;
+    border-left-color: #c0392b;
+    color: #721c24;
+}
+
+.create-form-container {
+    background: rgba(61, 26, 95, 0.3);
+    border: 1px solid rgba(126, 255, 162, 0.2);
+    border-radius: 12px;
+    padding: 30px;
+    margin-bottom: 30px;
+}
+
+.survey-form {
+    display: grid;
+    gap: 25px;
+}
+
+.form-group {
+    display: grid;
+    gap: 10px;
+}
+
+.form-group label {
+    font-weight: 600;
+    color: #e0e0e0;
+    font-size: 15px;
+}
+
+.form-group input,
+.form-group textarea,
+.form-group select {
+    padding: 12px 15px;
+    border: 1px solid rgba(126, 255, 162, 0.3);
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.05);
+    color: #fff;
+    font-family: Arial, sans-serif;
+    font-size: 14px;
+    transition: all 0.3s ease;
+}
+
+.form-group input:focus,
+.form-group textarea:focus,
+.form-group select:focus {
+    outline: none;
+    background: rgba(255, 255, 255, 0.1);
+    border-color: #7EFFA2;
+    box-shadow: 0 0 10px rgba(126, 255, 162, 0.2);
+}
+
+.form-group textarea {
+    resize: vertical;
+    font-family: 'Courier New', monospace;
+    font-size: 13px;
+}
+
+.form-group small {
+    color: #95a5a6;
+    font-size: 12px;
+}
+
+.form-actions {
+    display: flex;
+    gap: 15px;
+    flex-wrap: wrap;
+    margin-top: 10px;
+}
+
+.btn {
+    padding: 14px 28px;
+    border: none;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    transition: all 0.3s ease;
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    flex: 1;
+    min-height: 44px;
+    justify-content: center;
+}
+
+.btn-primary:hover {
+    opacity: 0.9;
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
+}
+
+.btn-secondary {
+    background: rgba(126, 255, 162, 0.1);
+    color: #7EFFA2;
+    border: 1px solid rgba(126, 255, 162, 0.3);
+}
+
+.btn-secondary:hover {
+    background: rgba(126, 255, 162, 0.2);
+}
+
+.btn-icon {
+    font-size: 18px;
+}
+
+.examples-section {
+    margin-top: 40px;
+}
+
+.examples-section h3 {
+    color: #7EFFA2;
+    margin-bottom: 20px;
+    font-size: 18px;
+}
+
+.examples {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 20px;
+}
+
+.example-card {
+    background: rgba(126, 255, 162, 0.05);
+    border: 1px solid rgba(126, 255, 162, 0.2);
+    border-radius: 8px;
+    padding: 20px;
+    transition: all 0.3s ease;
+}
+
+.example-card:hover {
+    background: rgba(126, 255, 162, 0.1);
+    border-color: rgba(126, 255, 162, 0.4);
+}
+
+.example-card h4 {
+    color: #7EFFA2;
+    margin: 0 0 10px 0;
+    font-size: 14px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.example-card p {
+    color: #95a5a6;
+    font-size: 13px;
+    line-height: 1.6;
+    margin: 0;
+}
+
+@media (max-width: 768px) {
+    .create-survey-container {
+        padding: 20px 10px;
+    }
+
+    .create-header h1 {
+        font-size: 1.6em;
+    }
+
+    .create-form-container {
+        padding: 20px;
+    }
+
+    .form-actions {
+        flex-direction: column;
+    }
+
+    .btn {
+        width: 100%;
+    }
+
+    .examples {
+        grid-template-columns: 1fr;
+    }
+}
+</style>
+{% endblock %}

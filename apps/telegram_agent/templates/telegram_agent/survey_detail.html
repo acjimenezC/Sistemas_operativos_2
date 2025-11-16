@@ -1,0 +1,515 @@
+{% extends "telegram_agent/base.html" %}
+{% load static math_filters %}
+
+{% block title %}{{ survey.title }}{% endblock %}
+
+{% block content %}
+<div class="survey-detail-container">
+    <div class="detail-header">
+        <div class="header-content">
+            <h1>{{ survey.title }}</h1>
+            <p class="description">{{ survey.description }}</p>
+            <div class="meta-info">
+                <span class="badge badge-{{ survey.status }}">{{ survey.get_status_display }}</span>
+                <span class="badge badge-type">{{ survey.get_survey_type_display }}</span>
+                <span class="date-info">Creada: {{ survey.created_at|date:"d/m/Y" }}</span>
+            </div>
+        </div>
+        <div class="response-stats">
+            <div class="stat">
+                <div class="stat-number">{{ total_responses }}</div>
+                <div class="stat-text">Total de Respuestas</div>
+            </div>
+            <div class="stat">
+                <div class="stat-number">{{ completed_responses }}</div>
+                <div class="stat-text">Completadas</div>
+            </div>
+            {% if total_responses > 0 %}
+                <div class="stat">
+                    <div class="stat-number">{{ completed_responses|add:0|mul:100|div:total_responses|floatformat:0 }}%</div>
+                    <div class="stat-text">Tasa Finalización</div>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Preguntas de la encuesta -->
+    <div class="survey-content">
+        <div class="questions-list">
+            {% for question in questions %}
+                <div class="question-item">
+                    <div class="question-number">{{ forloop.counter }}</div>
+                    <div class="question-details">
+                        <h3>{{ question.question_text }}</h3>
+                        <div class="question-meta">
+                            <span class="question-type">{{ question.get_question_type_display }}</span>
+                            {% if question.is_required %}
+                                <span class="badge-required">Requerida</span>
+                            {% endif %}
+                        </div>
+
+                        <!-- Opciones de respuesta (según tipo de pregunta) -->
+                        {% if question.question_type == "multiple" %}
+                            <div class="question-options">
+                                {% for option in question.options.all %}
+                                    <div class="option">
+                                        <input type="radio" id="option_{{ option.id }}" name="question_{{ question.id }}" value="{{ option.id }}" />
+                                        <label for="option_{{ option.id }}">{{ option.option_text }}</label>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        {% elif question.question_type == "yes_no" %}
+                            <div class="yes-no-options">
+                                <div class="option">
+                                    <input type="radio" id="yes_{{ question.id }}" name="question_{{ question.id }}" value="yes" />
+                                    <label for="yes_{{ question.id }}">Sí</label>
+                                </div>
+                                <div class="option">
+                                    <input type="radio" id="no_{{ question.id }}" name="question_{{ question.id }}" value="no" />
+                                    <label for="no_{{ question.id }}">No</label>
+                                </div>
+                            </div>
+                        {% elif question.question_type == "rating" %}
+                            <div class="rating-options">
+                                {% for i in "12345" %}
+                                    <input type="radio" id="rating_{{ question.id }}_{{ i }}" name="question_{{ question.id }}" value="{{ i }}" class="rating-input" />
+                                    <label for="rating_{{ question.id }}_{{ i }}" class="rating-label">★</label>
+                                {% endfor %}
+                            </div>
+                        {% elif question.question_type == "text" %}
+                            <textarea name="question_{{ question.id }}" placeholder="Escribe tu respuesta aquí..." class="text-answer"></textarea>
+                        {% endif %}
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+
+        <!-- Panel de información -->
+        <div class="info-panel">
+            <div class="panel-card">
+                <h4>📋 Información de la Encuesta</h4>
+                <div class="info-item">
+                    <span class="info-label">Tipo:</span>
+                    <span class="info-value">{{ survey.get_survey_type_display }}</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Estado:</span>
+                    <span class="info-value">{{ survey.get_status_display }}</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Preguntas:</span>
+                    <span class="info-value">{{ questions.count }}</span>
+                </div>
+                {% if survey.expires_at %}
+                    <div class="info-item">
+                        <span class="info-label">Expira:</span>
+                        <span class="info-value">{{ survey.expires_at|date:"d/m/Y" }}</span>
+                    </div>
+                {% endif %}
+            </div>
+
+            {% if user_response %}
+                <div class="panel-card success">
+                    <h4>✅ Ya has respondido esta encuesta</h4>
+                    <p>Tus respuestas fueron registradas el {{ user_response.completed_at|date:"d/m/Y H:i" }}</p>
+                </div>
+            {% else %}
+                <div class="panel-card info">
+                    <h4>ℹ️ Datos de respuesta</h4>
+                    <p>Al responder esta encuesta, tus datos se utilizarán para mejorar nuestros procesos de reclutamiento.</p>
+                </div>
+            {% endif %}
+
+            <div class="panel-card">
+                <h4>📊 Participación</h4>
+                <div class="participation">
+                    <div class="progress">
+                        <div class="progress-bar" style="width: {% if total_responses > 0 %}{{ completed_responses|add:0|mul:100|div:total_responses }}{% else %}0{% endif %}%"></div>
+                    </div>
+                    <p class="participation-text">{{ completed_responses }} de {{ total_responses }} respuestas completadas</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Acciones -->
+    <div class="detail-actions">
+        <a href="{% url 'telegram_agent:surveys_list' %}" class="btn btn-secondary">← Volver a Encuestas</a>
+        <a href="{% url 'telegram_agent:survey_results' survey.id %}" class="btn btn-primary">Ver Resultados →</a>
+    </div>
+</div>
+
+<style>
+.survey-detail-container {
+    padding: 20px;
+    max-width: 1100px;
+    margin: 0 auto;
+}
+
+.detail-header {
+    display: grid;
+    grid-template-columns: 1fr 300px;
+    gap: 30px;
+    margin-bottom: 40px;
+    padding-bottom: 30px;
+    border-bottom: 2px solid #e0e0e0;
+}
+
+.header-content h1 {
+    margin: 0 0 10px 0;
+    font-size: 2.2em;
+    color: #2c3e50;
+}
+
+.description {
+    color: #7f8c8d;
+    font-size: 15px;
+    line-height: 1.6;
+    margin: 0 0 15px 0;
+}
+
+.meta-info {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    align-items: center;
+}
+
+.badge {
+    display: inline-block;
+    padding: 6px 12px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.badge-active {
+    background: #d4edda;
+    color: #155724;
+}
+
+.badge-closed {
+    background: #f8d7da;
+    color: #721c24;
+}
+
+.badge-draft {
+    background: #fff3cd;
+    color: #856404;
+}
+
+.badge-type {
+    background: #e8f4f8;
+    color: #2980b9;
+}
+
+.date-info {
+    color: #95a5a6;
+    font-size: 13px;
+}
+
+.response-stats {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 15px;
+}
+
+.stat {
+    text-align: center;
+    padding: 15px;
+    background: #f8f9fa;
+    border-radius: 8px;
+}
+
+.stat-number {
+    font-size: 1.8em;
+    font-weight: bold;
+    color: #667eea;
+}
+
+.stat-text {
+    font-size: 12px;
+    color: #95a5a6;
+    text-transform: uppercase;
+    margin-top: 5px;
+}
+
+.survey-content {
+    display: grid;
+    grid-template-columns: 1fr 300px;
+    gap: 30px;
+    margin-bottom: 30px;
+}
+
+.questions-list {
+    display: grid;
+    gap: 20px;
+}
+
+.question-item {
+    display: flex;
+    gap: 20px;
+    background: white;
+    padding: 20px;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.question-number {
+    flex-shrink: 0;
+    width: 30px;
+    height: 30px;
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    color: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    font-size: 14px;
+}
+
+.question-details {
+    flex: 1;
+}
+
+.question-details h3 {
+    margin: 0 0 10px 0;
+    font-size: 1.05em;
+    color: #2c3e50;
+}
+
+.question-meta {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 15px;
+}
+
+.question-type {
+    background: #e8f4f8;
+    color: #2980b9;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.badge-required {
+    background: #ffe8e8;
+    color: #c0392b;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.question-options,
+.yes-no-options {
+    display: grid;
+    gap: 10px;
+    margin-top: 10px;
+}
+
+.option {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.option input[type="radio"] {
+    cursor: pointer;
+    width: 18px;
+    height: 18px;
+}
+
+.option label {
+    cursor: pointer;
+    color: #2c3e50;
+    margin: 0;
+    flex: 1;
+}
+
+.yes-no-options {
+    grid-template-columns: 1fr 1fr;
+}
+
+.rating-options {
+    display: flex;
+    gap: 5px;
+    margin-top: 10px;
+}
+
+.rating-input {
+    display: none;
+}
+
+.rating-label {
+    font-size: 28px;
+    color: #bdc3c7;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.rating-input:checked ~ .rating-label,
+.rating-label:hover {
+    color: #f1c40f;
+}
+
+.text-answer {
+    width: 100%;
+    min-height: 100px;
+    padding: 10px;
+    border: 1px solid #bdc3c7;
+    border-radius: 4px;
+    font-family: Arial, sans-serif;
+    font-size: 14px;
+    resize: vertical;
+    margin-top: 10px;
+}
+
+/* Panel lateral */
+.info-panel {
+    display: grid;
+    gap: 15px;
+}
+
+.panel-card {
+    background: white;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    padding: 15px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.panel-card h4 {
+    margin: 0 0 12px 0;
+    font-size: 14px;
+    color: #2c3e50;
+}
+
+.panel-card.success {
+    background: #d4edda;
+    border-color: #c3e6cb;
+}
+
+.panel-card.success h4 {
+    color: #155724;
+}
+
+.panel-card.info {
+    background: #d1ecf1;
+    border-color: #bee5eb;
+}
+
+.panel-card.info h4 {
+    color: #0c5460;
+}
+
+.panel-card p {
+    margin: 0;
+    font-size: 13px;
+    color: inherit;
+    line-height: 1.5;
+}
+
+.info-item {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 10px;
+    font-size: 13px;
+}
+
+.info-label {
+    font-weight: 600;
+    color: #2c3e50;
+}
+
+.info-value {
+    color: #7f8c8d;
+}
+
+.participation {
+    display: grid;
+    gap: 10px;
+}
+
+.progress {
+    width: 100%;
+    height: 8px;
+    background: #ecf0f1;
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.progress-bar {
+    height: 100%;
+    background: linear-gradient(90deg, #667eea, #764ba2);
+    transition: width 0.3s ease;
+}
+
+.participation-text {
+    font-size: 13px;
+    color: #7f8c8d;
+    margin: 0;
+}
+
+/* Acciones */
+.detail-actions {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    padding-top: 30px;
+}
+
+.btn {
+    padding: 12px 24px;
+    border: none;
+    border-radius: 4px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    text-decoration: none;
+    text-align: center;
+    transition: all 0.2s ease;
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+}
+
+.btn-primary:hover {
+    opacity: 0.9;
+    transform: translateY(-2px);
+}
+
+.btn-secondary {
+    background: #ecf0f1;
+    color: #2c3e50;
+    border: 1px solid #bdc3c7;
+}
+
+.btn-secondary:hover {
+    background: #bdc3c7;
+    color: white;
+}
+
+@media (max-width: 968px) {
+    .detail-header,
+    .survey-content {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 768px) {
+    .detail-actions {
+        flex-direction: column;
+    }
+
+    .btn {
+        width: 100%;
+    }
+}
+</style>
+{% endblock %}

@@ -1,0 +1,143 @@
+{% extends "telegram_agent/base.html" %}
+
+{% block title %}Analisis - Bot Reclutamiento{% endblock %}
+
+{% block content %}
+<h2 class="section-title" style="color: white;">Analisis y Estadisticas</h2>
+
+<div class="stat-grid">
+    <div class="stat-card">
+        <h3>Usuarios Activos</h3>
+        <div class="number">{{ active_users }}</div>
+    </div>
+    <div class="stat-card">
+        <h3>Mensajes Hoy</h3>
+        <div class="number">{{ messages_today }}</div>
+    </div>
+    <div class="stat-card">
+        <h3>Promedio de Confianza IA</h3>
+        <div class="number">{{ avg_confidence|floatformat:2 }}</div>
+    </div>
+    <div class="stat-card">
+        <h3>Feedback Promedio</h3>
+        <div class="number">{{ avg_feedback|floatformat:2 }}/5</div>
+    </div>
+</div>
+
+<h3 style="color: white; margin-top: 40px; margin-bottom: 20px;">Empleos Mas Solicitados</h3>
+
+<div class="chart-container">
+    {% for job in top_jobs %}
+    <div class="chart-bar">
+        <div class="chart-label">{{ job.title }}</div>
+        <div class="chart-fill" style="width: {{ job.search_percentage }}%;"></div>
+        <div class="chart-value">{{ job.search_count }} preguntas</div>
+    </div>
+    {% empty %}
+    <p style="text-align: center; color: #999;">Sin datos aun</p>
+    {% endfor %}
+</div>
+
+<h3 style="color: white; margin-top: 40px; margin-bottom: 20px;">Actividad por Dia (Ultimos 7 Dias)</h3>
+
+<div class="chart-container">
+    {% if activity_last_7_days %}
+        {% for day in activity_last_7_days %}
+        <div class="chart-bar">
+            <div class="chart-label">{{ day.date|date:"l" }}</div>
+            <div class="chart-fill" style="width: {{ day.percentage }}%;"></div>
+            <div class="chart-value">{{ day.count }} mensajes</div>
+        </div>
+        {% endfor %}
+    {% else %}
+        <p style="text-align: center; color: #aaa; padding: 40px;">Sin datos aún</p>
+    {% endif %}
+</div>
+
+<h3 style="color: white; margin-top: 40px; margin-bottom: 20px;">Calidad de Respuestas IA</h3>
+
+<div class="chart-container">
+    <div class="chart-bar">
+        <div class="chart-label">Excelente (5/5)</div>
+        <div class="chart-fill" style="width: {{ quality_excellent }}%;"></div>
+        <div class="chart-value">{{ excellent_count }} respuestas</div>
+    </div>
+    <div class="chart-bar">
+        <div class="chart-label">Bueno (4/5)</div>
+        <div class="chart-fill" style="width: {{ quality_good }}%;"></div>
+        <div class="chart-value">{{ good_count }} respuestas</div>
+    </div>
+    <div class="chart-bar">
+        <div class="chart-label">Regular (3/5)</div>
+        <div class="chart-fill" style="width: {{ quality_ok }}%;"></div>
+        <div class="chart-value">{{ ok_count }} respuestas</div>
+    </div>
+    <div class="chart-bar">
+        <div class="chart-label">Malo (1-2/5)</div>
+        <div class="chart-fill" style="width: {{ quality_bad }}%;"></div>
+        <div class="chart-value">{{ bad_count }} respuestas</div>
+    </div>
+</div>
+
+<h3 style="color: white; margin-top: 40px; margin-bottom: 20px;">Estadisticas por Usuario</h3>
+
+<div style="overflow-x: auto; margin-top: 20px;">
+    <table style="width: 100%; border-collapse: collapse;">
+        <thead>
+            <tr style="background: rgba(126, 255, 162, 0.1); border-bottom: 2px solid #7EFFA2;">
+                <th style="padding: 10px; text-align: left; color: white;">Usuario</th>
+                <th style="padding: 10px; text-align: left; color: white;">Mensajes</th>
+                <th style="padding: 10px; text-align: left; color: white;">Respuestas IA</th>
+                <th style="padding: 10px; text-align: left; color: white;">Feedback Promedio</th>
+                <th style="padding: 10px; text-align: left; color: white;">Miembro Desde</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for user_stat in user_statistics %}
+            <tr style="border-bottom: 1px solid #eee;">
+                <td style="padding: 10px;">
+                    <strong>
+                        {% if user_stat.user.first_name or user_stat.user.last_name %}
+                            {{ user_stat.user.first_name }} {{ user_stat.user.last_name }}
+                        {% else %}
+                            @{{ user_stat.user.username }}
+                        {% endif %}
+                    </strong><br>
+                    <span style="color: #666; font-size: 12px;">@{{ user_stat.user.username }}</span>
+                </td>
+                <td style="padding: 10px;">{{ user_stat.message_count }}</td>
+                <td style="padding: 10px;">{{ user_stat.response_count }}</td>
+                <td style="padding: 10px;">{{ user_stat.avg_feedback|floatformat:2 }}/5</td>
+                <td style="padding: 10px;">{{ user_stat.user.created_at|date:"d/m/Y" }}</td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="5" style="padding: 20px; text-align: center; color: #999;">No hay datos</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Hacer dinámicas las barras de actividad
+    const chartBars = document.querySelectorAll('.chart-bar');
+    chartBars.forEach(bar => {
+        const fill = bar.querySelector('.chart-fill');
+        const value = bar.querySelector('.chart-value');
+        
+        if (fill && value) {
+            const width = fill.style.width;
+            const count = value.textContent.trim();
+            
+            // Si el ancho es 0% o el conteo es 0, hacer la barra verde completa
+            if (width === '0%' || count.startsWith('0')) {
+                fill.style.width = '100%';
+                fill.style.background = 'var(--secondary-color)';
+            }
+        }
+    });
+});
+</script>
+{% endblock %}

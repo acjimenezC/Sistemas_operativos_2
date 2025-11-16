@@ -1,0 +1,76 @@
+{% extends "telegram_agent/base.html" %}
+
+{% block title %}Mensajes - Bot Reclutamiento{% endblock %}
+
+{% block content %}
+<h2 class="section-title">💬 Historial de Mensajes</h2>
+
+<div class="search-box">
+    <input type="text" id="searchInput" placeholder="Buscar en mensajes...">
+</div>
+
+<div class="message-list">
+    {% for message in messages %}
+    <div class="message-item {% if message.direction == 'incoming' %}incoming{% else %}outgoing{% endif %}">
+        <div class="message-header">
+            <strong>
+                {% if message.user.first_name or message.user.last_name %}
+                    {{ message.user.first_name }} {{ message.user.last_name }}
+                {% else %}
+                    @{{ message.user.username }}
+                {% endif %}
+            </strong>
+            <span style="color: #666; font-size: 12px;">@{{ message.user.username }}</span>
+            <span>{{ message.created_at|date:"d/m/Y H:i" }}</span>
+        </div>
+        <div class="message-content">{{ message.content }}</div>
+        <div class="message-meta">
+            Tipo: {{ message.get_message_type_display }} | Direccion: {{ message.get_direction_display }}
+        </div>
+
+        {% if message.direction == 'incoming' and message.ai_response %}
+        <div style="margin-top: 10px; padding: 10px; background: #e8f4f8; border-radius: 5px;">
+            <strong>Respuesta IA ({{ message.ai_response.model_used }}):</strong><br>
+            <p>{{ message.ai_response.response_text }}</p>
+            <small>Confianza: {{ message.ai_response.confidence_score|floatformat:2 }} | Estado: {{ message.ai_response.get_status_display }}</small>
+            
+            <button onclick="toggleFeedback('{{ message.ai_response.id }}')" style="background: #667eea; color: white; border: none; padding: 5px 10px; border-radius: 3px; cursor: pointer; margin-top: 10px;">
+                Dar Feedback
+            </button>
+
+            <div id="feedback-{{ message.ai_response.id }}" class="feedback-form">
+                <label>Calificacion:</label>
+                <select id="feedback-rating-{{ message.ai_response.id }}" style="padding: 8px; margin: 10px 0; border: 1px solid #ddd; border-radius: 3px;">
+                    <option value="1">Muy Malo</option>
+                    <option value="2">Malo</option>
+                    <option value="3">Regular</option>
+                    <option value="4">Bueno</option>
+                    <option value="5">Excelente</option>
+                </select>
+                
+                <label>Comentarios:</label>
+                <textarea id="feedback-text-{{ message.ai_response.id }}" placeholder="Describe tu feedback..."></textarea>
+                
+                <button onclick="submitFeedback('{{ message.ai_response.id }}')">Enviar Feedback</button>
+                <button type="button" onclick="toggleFeedback('{{ message.ai_response.id }}')" class="btn-cancel">Cancelar</button>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+    {% empty %}
+    <p style="text-align: center; color: #999; padding: 40px 0;">No hay mensajes aún</p>
+    {% endfor %}
+</div>
+
+<script>
+document.getElementById('searchInput').addEventListener('keyup', function(e) {
+    const searchTerm = e.target.value.toLowerCase();
+    const messages = document.querySelectorAll('.message-item');
+    
+    messages.forEach(msg => {
+        const content = msg.textContent.toLowerCase();
+        msg.style.display = content.includes(searchTerm) ? 'block' : 'none';
+    });
+});
+</script>
+{% endblock %}

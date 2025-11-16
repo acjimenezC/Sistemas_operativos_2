@@ -1,0 +1,409 @@
+{% extends "telegram_agent/base.html" %}
+{% load static math_filters %}
+
+{% block title %}Encuestas y Sondeos{% endblock %}
+
+{% block content %}
+<div class="surveys-container">
+    <div class="header-section">
+        <h1>📊 Encuestas y Sondeos</h1>
+        <p>Gestiona y analiza encuestas de candidatos y empleados</p>
+        
+        <div class="action-buttons">
+            <a href="{% url 'telegram_agent:create_survey_with_ai' %}" class="btn btn-primary btn-ai">
+                <span>✨ Crear con Gemini</span>
+            </a>
+            <a href="/admin/telegram_agent/survey/add/" class="btn btn-secondary">+ Manual</a>
+        </div>
+    </div>
+
+    <!-- Filtros -->
+    <div class="filters-section">
+        <form method="get" class="filters-form">
+            <div class="filter-group">
+                <label for="status_filter">Estado:</label>
+                <select name="status" id="status_filter" onchange="this.form.submit()">
+                    <option value="">Todos</option>
+                    {% for value, label in status_choices %}
+                        <option value="{{ value }}" {% if current_status == value %}selected{% endif %}>
+                            {{ label }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="filter-group">
+                <label for="type_filter">Tipo:</label>
+                <select name="type" id="type_filter" onchange="this.form.submit()">
+                    <option value="">Todos</option>
+                    {% for value, label in type_choices %}
+                        <option value="{{ value }}" {% if current_type == value %}selected{% endif %}>
+                            {{ label }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+        </form>
+    </div>
+
+    <!-- Lista de Encuestas -->
+    <div class="surveys-grid">
+        {% if surveys %}
+            {% for survey in surveys %}
+                <div class="survey-card">
+                    <div class="survey-header">
+                        <h3>{{ survey.title }}</h3>
+                        <span class="status-badge status-{{ survey.status }}">
+                            {{ survey.get_status_display }}
+                        </span>
+                    </div>
+
+                    {% if survey.description %}
+                        <p class="survey-description">{{ survey.description }}</p>
+                    {% endif %}
+
+                    <div class="survey-meta">
+                        <div class="meta-item">
+                            <span class="meta-label">Tipo:</span>
+                            <span class="meta-value">{{ survey.get_survey_type_display }}</span>
+                        </div>
+                        <div class="meta-item">
+                            <span class="meta-label">Preguntas:</span>
+                            <span class="meta-value">{{ survey.questions.count }}</span>
+                        </div>
+                    </div>
+
+                    <div class="survey-stats">
+                        <div class="stat-item">
+                            <div class="stat-label">Respuestas</div>
+                            <div class="stat-value">
+                                <strong>{{ survey.completed_responses }}</strong>
+                                <span class="stat-total">/ {{ survey.total_responses }}</span>
+                            </div>
+                            {% if survey.total_responses > 0 %}
+                                <div class="progress-bar">
+                                    <div class="progress-fill" style="width: {{ survey.completed_responses|mul:100|div:survey.total_responses }}%"></div>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <div class="survey-dates">
+                        <small>
+                            {% if survey.expires_at %}
+                                Expira: {{ survey.expires_at|date:"d/m/Y" }}
+                            {% else %}
+                                Creada: {{ survey.created_at|date:"d/m/Y" }}
+                            {% endif %}
+                        </small>
+                    </div>
+
+                    <div class="survey-actions">
+                        <a href="{% url 'telegram_agent:survey_detail' survey.id %}" class="btn btn-secondary">
+                            Ver Detalles
+                        </a>
+                        <a href="{% url 'telegram_agent:survey_results' survey.id %}" class="btn btn-secondary">
+                            Resultados
+                        </a>
+                        <a href="/admin/telegram_agent/survey/{{ survey.id }}/change/" class="btn btn-tertiary">
+                            Editar
+                        </a>
+                    </div>
+                </div>
+            {% endfor %}
+        {% else %}
+            <div class="empty-state">
+                <p>No hay encuestas disponibles</p>
+                <a href="/admin/telegram_agent/survey/add/" class="btn btn-primary">Crear Primera Encuesta</a>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<style>
+.surveys-container {
+    padding: 20px;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.header-section {
+    margin-bottom: 30px;
+    border-bottom: 2px solid #e0e0e0;
+    padding-bottom: 20px;
+}
+
+.header-section h1 {
+    font-size: 2em;
+    margin: 0 0 10px 0;
+    color: #2c3e50;
+}
+
+.header-section p {
+    color: #7f8c8d;
+    margin: 0 0 15px 0;
+}
+
+.action-buttons {
+    display: flex;
+    gap: 10px;
+}
+
+.filters-section {
+    background: #f8f9fa;
+    padding: 15px;
+    border-radius: 8px;
+    margin-bottom: 30px;
+}
+
+.filters-form {
+    display: flex;
+    gap: 20px;
+    flex-wrap: wrap;
+}
+
+.filter-group {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.filter-group label {
+    font-weight: 600;
+    color: #2c3e50;
+}
+
+.filter-group select {
+    padding: 8px 12px;
+    border: 1px solid #bdc3c7;
+    border-radius: 4px;
+    font-size: 14px;
+}
+
+.surveys-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+    gap: 20px;
+}
+
+.survey-card {
+    background: white;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    padding: 20px;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.survey-card:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    transform: translateY(-2px);
+}
+
+.survey-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: start;
+    margin-bottom: 15px;
+    gap: 10px;
+}
+
+.survey-header h3 {
+    margin: 0;
+    font-size: 1.2em;
+    color: #2c3e50;
+    flex: 1;
+}
+
+.status-badge {
+    padding: 4px 8px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.status-active {
+    background: #d4edda;
+    color: #155724;
+}
+
+.status-closed {
+    background: #e2e3e5;
+    color: #383d41;
+}
+
+.status-draft {
+    background: #fff3cd;
+    color: #856404;
+}
+
+.survey-description {
+    color: #7f8c8d;
+    font-size: 14px;
+    margin: 0 0 15px 0;
+    line-height: 1.5;
+}
+
+.survey-meta {
+    background: #f8f9fa;
+    padding: 12px;
+    border-radius: 6px;
+    margin-bottom: 15px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+}
+
+.meta-item {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.meta-label {
+    font-size: 12px;
+    color: #95a5a6;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+.meta-value {
+    font-size: 14px;
+    color: #2c3e50;
+    font-weight: 600;
+}
+
+.survey-stats {
+    margin-bottom: 15px;
+}
+
+.stat-item {
+    display: grid;
+    gap: 8px;
+}
+
+.stat-label {
+    font-size: 12px;
+    color: #95a5a6;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+.stat-value {
+    font-size: 18px;
+    color: #2c3e50;
+    font-weight: bold;
+}
+
+.stat-total {
+    font-size: 14px;
+    color: #95a5a6;
+    margin-left: 4px;
+}
+
+.progress-bar {
+    width: 100%;
+    height: 6px;
+    background: #ecf0f1;
+    border-radius: 3px;
+    overflow: hidden;
+}
+
+.progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #3498db, #2980b9);
+    transition: width 0.3s ease;
+}
+
+.survey-dates {
+    color: #95a5a6;
+    font-size: 12px;
+    margin-bottom: 15px;
+    padding-top: 10px;
+    border-top: 1px solid #ecf0f1;
+}
+
+.survey-actions {
+    display: grid;
+    gap: 10px;
+    grid-template-columns: 1fr 1fr;
+}
+
+.btn {
+    padding: 8px 12px;
+    border: none;
+    border-radius: 4px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    text-decoration: none;
+    text-align: center;
+    transition: all 0.2s ease;
+    display: inline-block;
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+}
+
+.btn-primary:hover {
+    opacity: 0.9;
+    transform: translateY(-1px);
+}
+
+.btn-secondary {
+    background: #ecf0f1;
+    color: #2c3e50;
+    border: 1px solid #bdc3c7;
+}
+
+.btn-secondary:hover {
+    background: #bdc3c7;
+    color: white;
+}
+
+.btn-tertiary {
+    background: white;
+    color: #3498db;
+    border: 1px solid #3498db;
+}
+
+.btn-tertiary:hover {
+    background: #3498db;
+    color: white;
+}
+
+.empty-state {
+    grid-column: 1 / -1;
+    text-align: center;
+    padding: 60px 20px;
+    color: #95a5a6;
+}
+
+.empty-state p {
+    font-size: 16px;
+    margin-bottom: 20px;
+}
+
+@media (max-width: 768px) {
+    .surveys-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .survey-actions {
+        grid-template-columns: 1fr;
+    }
+
+    .filters-form {
+        gap: 10px;
+    }
+}
+</style>
+
+<!-- Filtro personalizado para multiplicación en templates -->
+{% comment %}
+Nota: Necesitaremos agregar filtro personalizado para mul y div en Django
+{% endcomment %}
+{% endblock %}

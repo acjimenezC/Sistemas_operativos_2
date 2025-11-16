@@ -1,0 +1,55 @@
+{% extends "telegram_agent/base.html" %}
+
+{% block title %}Dashboard - Panel Admin - Loomy Bot - Magneto{% endblock %}
+
+{% block content %}
+<h2 class="section-title" style="color: white;">Historial de Mensajes</h2>
+
+<div class="stat-grid">
+    <div class="stat-card">
+        <h3> Usuarios Totales</h3>
+        <div class="number">{{ total_users }}</div>
+    </div>
+    <div class="stat-card">
+        <h3> Mensajes Recibidos</h3>
+        <div class="number">{{ total_messages }}</div>
+    </div>
+    <div class="stat-card">
+        <h3> Respuestas IA</h3>
+        <div class="number">{{ total_responses }}</div>
+    </div>
+    <div class="stat-card">
+        <h3> Ofertas Publicadas</h3>
+        <div class="number">{{ total_jobs }}</div>
+    </div>
+</div>
+
+<h3 style="color: white; margin-top: 40px; margin-bottom: 20px; font-size: 20px; font-weight: 600;">📌 Actividad Reciente</h3>
+
+<div class="message-list">
+    {% for message in recent_messages %}
+    <div class="message-item incoming">
+        <div class="message-header">
+            <strong>
+                {% if message.user.first_name or message.user.last_name %}
+                    {{ message.user.first_name }} {{ message.user.last_name }}
+                {% else %}
+                    @{{ message.user.username }}
+                {% endif %}
+            </strong>
+            <span style="color: #666; font-size: 12px;">@{{ message.user.username }}</span>
+            <span>{{ message.created_at|date:"d/m/Y H:i" }}</span>
+        </div>
+        <div class="message-content">{{ message.content }}</div>
+        {% if message.ai_response %}
+            <div style="margin-top: 10px; padding: 10px; background: #e8f4f8; border-radius: 5px;">
+                <strong>Respuesta IA:</strong><br>
+                {{ message.ai_response.response_text|truncatewords:30 }}
+            </div>
+        {% endif %}
+    </div>
+    {% empty %}
+    <p style="text-align: center; color: #999;">No hay mensajes aún</p>
+    {% endfor %}
+</div>
+{% endblock %}

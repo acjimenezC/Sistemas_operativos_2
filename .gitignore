@@ -1,0 +1,173 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+pip-wheel-metadata/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Virtual Environments
+venv/
+.venv/
+env/
+ENV/
+env.bak/
+venv.bak/
+
+# Django
+*.log
+local_settings.py
+db.sqlite3
+db.sqlite3-journal
+/media
+/staticfiles
+*.pot
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+.env.local
+.env.*.local
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+
+# OS
+.DS_Store
+Thumbs.db
+.gitkeep
+
+# Project specific
+logs/
+*.backup
+*.bak
+.coverage
+htmlcov/
+
+# Node (if using frontend tools)
+node_modules/
+npm-debug.log
+yarn-error.log
+
+# Testing
+.pytest_cache/
+.tox/
+.hypothesis/
+
+# Compiled files
+*.pyc
+
+# Database backups
+*.sql
+*.sqlite
+
+# Temporary files
+*.tmp
+tmp/
+temp/
+
+# IDE specific
+*.sublime-project
+*.sublime-workspace
+
+# CI/CD
+.github/workflows/secrets.yml
+
+# Docker
+.docker/
+docker-compose.override.yml
+
+# Celery
+celerybeat-schedule
+
+# SageMath parsed files
+.sage.py
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# IPython
+profile_default/
+ipython_config.py
+
+# pyenv
+.python-version
+
+# Environments
+.env
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# Media and Static files
+/media/
+/static/
+/staticfiles/
+
+# Sensitive files
+secrets.json
+credentials.json
+*.pem
+*.key
+
+# Generated files
+local_settings.py
+wsgi.py.bak
+
+# Backups
+*.bak
+*.backup
+*.orig
+*.tmp
+
+# Cache files
+.cache/
+.pytest_cache/
+.mypy_cache/
+
+# Type checking
+.dmypy.json
+dmypy.json
+
+# Local development
+.vscode/settings.json
+.vscode/launch.json
+
+# Project specific files
+services/media/*.png
+services/media/*.jpg
+services/media/*.jpeg
+
+# Logs directory
+logs/**
+!logs/.gitkeep
+
+# Generated migrations (optional - uncomment if needed)
+# apps/*/migrations/0*.py
+# !apps/*/migrations/__init__.py

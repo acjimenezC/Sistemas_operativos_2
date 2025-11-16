@@ -1,0 +1,199 @@
+/* ============================================
+   ANALYTICS STYLES
+   ============================================ */
+
+/* Chart Container */
+.chart-container {
+    background: white;
+    padding: 25px;
+    border-radius: 12px;
+    margin-top: 30px;
+    box-shadow: var(--shadow-sm);
+    animation: fadeInUp 0.6s ease;
+}
+
+.chart-container h3 {
+    color: var(--primary-color);
+    font-size: 18px;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-weight: 600;
+}
+
+.chart-wrapper {
+    position: relative;
+    height: 300px;
+    animation: fadeInUp 0.6s ease;
+}
+
+/* Bar Chart */
+.chart-bar {
+    display: flex;
+    align-items: center;
+    margin-bottom: 15px;
+    animation: slideInRight 0.5s ease;
+}
+
+.chart-label {
+    width: 150px;
+    font-weight: 600;
+    color: var(--text-primary);
+    font-size: 13px;
+}
+
+.chart-fill {
+    flex: 1;
+    height: 35px;
+    background: linear-gradient(90deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+    border-radius: 6px;
+    margin: 0 15px;
+    position: relative;
+    box-shadow: var(--shadow-sm);
+    transition: all var(--transition-normal);
+}
+
+.chart-fill:hover {
+    box-shadow: var(--shadow-md);
+    transform: scaleY(1.1);
+}
+
+.chart-value {
+    width: 50px;
+    text-align: right;
+    font-weight: 700;
+    color: var(--primary-color);
+    font-size: 14px;
+}
+
+/* Stat Cards para Analytics */
+.stat-card {
+    background: linear-gradient(135deg, var(--primary-color) 0%, #5a2885 100%);
+    color: white;
+    padding: 30px 25px;
+    border-radius: 12px;
+    text-align: center;
+    box-shadow: var(--shadow-md);
+    transition: all var(--transition-normal);
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+    animation: fadeInUp 0.6s ease;
+}
+
+.stat-card::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    right: -50%;
+    width: 200px;
+    height: 200px;
+    background: rgba(126, 255, 162, 0.1);
+    border-radius: 50%;
+    transition: all var(--transition-normal);
+}
+
+.stat-card:hover {
+    transform: translateY(-10px);
+    box-shadow: var(--shadow-lg);
+}
+
+.stat-card:hover::before {
+    top: -25%;
+    right: -25%;
+}
+
+.stat-card h3 {
+    font-size: 14px;
+    opacity: 0.95;
+    margin-bottom: 15px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+}
+
+.stat-card .number {
+    font-size: 42px;
+    font-weight: 800;
+    color: var(--secondary-color);
+    letter-spacing: 2px;
+    position: relative;
+    z-index: 1;
+}
+
+/* Table Analytics */
+.analytics-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+    background: white;
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: var(--shadow-sm);
+}
+
+.analytics-table thead {
+    background: linear-gradient(135deg, var(--primary-color) 0%, #5a2885 100%);
+    color: white;
+}
+
+.analytics-table th {
+    padding: 15px;
+    text-align: left;
+    font-weight: 600;
+    font-size: 13px;
+}
+
+.analytics-table td {
+    padding: 15px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.analytics-table tbody tr:hover {
+    background: var(--light-bg);
+    transition: background var(--transition-fast);
+}
+
+.analytics-table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+/* Stat Grid Analytics */
+.stat-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 25px;
+    margin-bottom: 40px;
+}
+
+/* ============================================
+   RESPONSIVE ANALYTICS
+   ============================================ */
+@media (max-width: 768px) {
+    .chart-wrapper {
+        height: 250px;
+    }
+
+    .chart-label {
+        width: 100px;
+        font-size: 12px;
+    }
+
+    .stat-grid {
+        grid-template-columns: 1fr;
+        gap: 15px;
+    }
+
+    .analytics-table {
+        font-size: 12px;
+    }
+
+    .analytics-table th,
+    .analytics-table td {
+        padding: 10px;
+    }
+
+    .stat-card .number {
+        font-size: 32px;
+    }
+}

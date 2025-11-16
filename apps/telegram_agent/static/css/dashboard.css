@@ -1,0 +1,140 @@
+/* ============================================
+   DASHBOARD STYLES
+   ============================================ */
+
+/* Stat Grid */
+.stat-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 25px;
+    margin-bottom: 40px;
+}
+
+.stat-card {
+    background: linear-gradient(135deg, var(--primary-color) 0%, #5a2885 100%);
+    color: white;
+    padding: 30px 25px;
+    border-radius: 12px;
+    text-align: center;
+    box-shadow: var(--shadow-md);
+    transition: all var(--transition-normal);
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+    animation: fadeInUp 0.6s ease;
+}
+
+.stat-card::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    right: -50%;
+    width: 200px;
+    height: 200px;
+    background: rgba(126, 255, 162, 0.1);
+    border-radius: 50%;
+    transition: all var(--transition-normal);
+}
+
+.stat-card:hover {
+    transform: translateY(-10px);
+    box-shadow: var(--shadow-lg);
+}
+
+.stat-card:hover::before {
+    top: -25%;
+    right: -25%;
+}
+
+.stat-card h3 {
+    font-size: 14px;
+    color: var(--secondary-color);
+    margin-bottom: 15px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+}
+
+.stat-card .number {
+    font-size: 48px;
+    font-weight: 800;
+    color: var(--secondary-color);
+    letter-spacing: 2px;
+    position: relative;
+    z-index: 1;
+}
+
+/* Actividad Reciente */
+.message-list {
+    background: var(--light-bg);
+    border-radius: 12px;
+    padding: 25px;
+    margin-top: 30px;
+}
+
+.message-item {
+    background: white;
+    padding: 20px;
+    margin-bottom: 15px;
+    border-radius: 10px;
+    border-left: 5px solid var(--primary-color);
+    box-shadow: var(--shadow-sm);
+    transition: all var(--transition-normal);
+    animation: slideInRight 0.5s ease;
+}
+
+.message-item:hover {
+    box-shadow: var(--shadow-md);
+    transform: translateX(5px);
+}
+
+.message-item.incoming {
+    border-left-color: var(--secondary-color);
+}
+
+.message-item.outgoing {
+    border-left-color: #667eea;
+}
+
+.message-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+    font-size: 13px;
+    color: var(--text-secondary);
+    font-weight: 600;
+}
+
+.message-content {
+    color: var(--text-primary);
+    margin-bottom: 12px;
+    line-height: 1.6;
+    font-size: 15px;
+}
+
+.message-meta {
+    font-size: 11px;
+    color: #999;
+    display: flex;
+    gap: 15px;
+}
+
+/* ============================================
+   RESPONSIVE DASHBOARD
+   ============================================ */
+@media (max-width: 768px) {
+    .stat-grid {
+        grid-template-columns: 1fr;
+        gap: 15px;
+    }
+
+    .message-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+    }
+
+    .stat-card .number {
+        font-size: 36px;
+    }
+}
