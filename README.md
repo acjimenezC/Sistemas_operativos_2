@@ -250,12 +250,6 @@ Los logs se guardan en:
 - La encuesta debe tener al menos 1 pregunta
 - Revisa que el usuario es un TelegramUser registrado
 
-## 📚 Documentación Completa
-
-- **SURVEYS_HU11.md** - Documentación técnica del sistema de encuestas
-- **SURVEY_QUICK_START.md** - Guía rápida para usar encuestas
-- **INTEGRATION_SUMMARY.md** - Resumen de integración completa
-
 ## 🚀 Desplegar a Producción
 
 ```bash
